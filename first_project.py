@@ -1,4 +1,4 @@
-from flask import Flask, flash, redirect, url_for, request
+from flask import Flask, flash, redirect, url_for, request, jsonify
 from sqlalchemy.orm import sessionmaker
 from datetime import date
 from models import Advertisement, engine
@@ -9,12 +9,14 @@ session = Session()
 
 app = Flask('app')
 app.config['SECRET_KEY'] = 'hgerg67486sre1g56fgv74we89fc4z1x23v41s6tg7w98fv4w16'
+app.config['JSON_AS_ASCII'] = False
 
 
 @app.route("/", methods=["GET"])
 def get():
     advertisements = session.query(Advertisement).all()
-    return f'Объявления = {[adv.description for adv in advertisements]}'
+    return jsonify(объявления=[adv.description for adv in advertisements])
+    # return f'Объявления = {[adv.description for adv in advertisements]}'
 
 
 @app.route("/", methods=["POST"])
