@@ -1,42 +1,54 @@
-from flask import Flask, flash, redirect, url_for, request, jsonify
-from sqlalchemy.orm import sessionmaker
+from flask import Flask, request
+from flask_sqlalchemy import SQLAlchemy
+from sqlalchemy.orm.exc import UnmappedInstanceError
 from datetime import date
-from models import Advertisement, engine
 
-
-Session = sessionmaker(bind=engine)
-session = Session()
-
-app = Flask('app')
-app.config['SECRET_KEY'] = 'hgerg67486sre1g56fgv74we89fc4z1x23v41s6tg7w98fv4w16'
+app = Flask(__name__)
 app.config['JSON_AS_ASCII'] = False
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://nelot:12345@localhost:5432/netol_flask'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+db = SQLAlchemy(app)
+
+
+class Advertisement(db.Model):
+    advert_id = db.Column(db.Integer, primary_key=True)
+    description = db.Column(db.Text)
+    owner = db.Column(db.String(40))
+    created_at = db.Column(db.Date, default=date.today())
+
+    def __repr__(self):
+        return f'\n№{self.advert_id}:{self.owner}({self.created_at})-{self.description}'
 
 
 @app.route("/", methods=["GET"])
 def get():
-    advertisements = session.query(Advertisement).all()
-    return jsonify(объявления=[adv.description for adv in advertisements])
-    # return f'Объявления = {[adv.description for adv in advertisements]}'
+    advertisements = Advertisement.query.all()
+    return f'Объявления {[adv for adv in advertisements]}'
 
 
 @app.route("/", methods=["POST"])
 def create():
-    today = date.today()
-    data = request.get_json()
-    advertisement = Advertisement(description=data['text'], owner=data['owner'], created_at=today)
-    session.add(advertisement)
-    session.commit()
-    flash("Объявление добавлено")
-    return f"Создано объявление - №{advertisement.advert_id}: {advertisement.description}"
+    if request.method == "POST":
+        try:
+            data = request.get_json()
+            advertisement = Advertisement(description=data['text'], owner=data['owner'])
+            db.session.add(advertisement)
+            db.session.commit()
+            return f"Создано объявление - {advertisement}"
+        except KeyError:
+            db.session.rollback()
+            return f"Ошибка создания объявления"
 
 
-@app.route("/<int:advert_id>", methods=["DELETE"])
-def delete(advert_id):
-    advertisement = session.query(Advertisement).filter_by(advert_id=advert_id).one()
-    session.delete(advertisement)
-    session.commit()
-    flash("Объявление удалено")
-    return f"Удалено объявление - №{advertisement.advert_id}: {advertisement.description}"
+@app.route("/<int:pk>", methods=["DELETE"])
+def delete(pk):
+    try:
+        advertisement = Advertisement.query.get(pk)
+        db.session.delete(advertisement)
+        db.session.commit()
+        return f"Удалено объявление -{advertisement}"
+    except UnmappedInstanceError:
+        return f'Объявления с номером "{pk}" не существует'
 
 
 if __name__ == '__main__':
