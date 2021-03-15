@@ -1,15 +1,51 @@
-GET http://127.0.0.1:5000/
-Content-Type: application/json
-###
+############################ ПОЛЬЗОВАТЕЛЬ ############################
 
-POST http://127.0.0.1:5000/
+POST http://127.0.0.1:5000/register
 Content-Type: application/json
 
 {
-    "text": "продаю велик",
-    "owner": "Андрей"
+    "name": "Лиза",
+    "email": "lis@me.com",
+    "password": "sdfjkh2378"
 }
+
 ###
 
-DELETE http://127.0.0.1:5000/6
+POST http://127.0.0.1:5000/register
+Content-Type: application/json
+
+{
+    "name": "Андрей",
+    "email": "and@me.com",
+    "password": "348r7yhnjk387r13!*N#4"
+}
+
+############################ ОБЪЯВЛЕНИЕ ############################
+
+GET http://127.0.0.1:5000/advertisements
+Content-Type: application/json
+
+###
+
+POST http://127.0.0.1:5000/advertisements
+Content-Type: application/json
+Authorization: lis@me.com sdfjkh2378
+
+{
+    "text": "продаю ноут"
+}
+
+###
+
+POST http://127.0.0.1:5000/advertisements
+Content-Type: application/json
+Authorization: and@me.com 348r7yhnjk387r13!*N#4
+
+{
+    "text": "продаю газель"
+}
+
+###
+
+DELETE http://127.0.0.1:5000/advertisements/1
 Content-Type: application/json
